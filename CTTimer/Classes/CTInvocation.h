@@ -2,11 +2,11 @@
 //  CTInvocation.h
 //  Pods
 //
-//  Created by wshaolin on 16/7/7.
-//  Copyright © 2016年 wshaolin. All rights reserved.
+//  Created by wshaolin on 2017/6/14.
+//
 //
 
-@import Foundation;
+#import <Foundation/Foundation.h>
 
 typedef void(^CTInvocationActionBlock)(id executor);
 
@@ -27,4 +27,4 @@ typedef void(^CTInvocationActionBlock)(id executor);
 
 @end
 
-FOUNDATION_EXPORT NSUInteger const CTInvocationFirstArgumentIndex;
+extern NSUInteger const CTInvocationFirstArgumentIndex;

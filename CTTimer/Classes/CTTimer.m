@@ -2,17 +2,12 @@
 //  CTTimer.m
 //  Pods
 //
-//  Created by wshaolin on 16/7/5.
-//  Copyright © 2016年 wshaolin. All rights reserved.
+//  Created by wshaolin on 2017/6/14.
+//
 //
 
 #import "CTTimer.h"
-
-typedef NS_ENUM(NSInteger, CTTimerInstanceMethod) {
-    CTTimerInstanceMethodInitializer    = 0,
-    CTTimerInstanceMethodTimer          = 1,
-    CTTimerInstanceMethodScheduledTimer = 2
-};
+#import "CTInvocation.h"
 
 @interface CTTimer(){
     NSTimer *_timer;
@@ -22,115 +17,71 @@ typedef NS_ENUM(NSInteger, CTTimerInstanceMethod) {
 
 @implementation CTTimer
 
-+ (instancetype)taskTimerWithInvocation:(CTInvocation *)invocation timerData:(CTTimerData *)timerData{
-    CTTimer *timer = [self timerWithInvocation:invocation timerData:timerData];
-    [timer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
++ (instancetype)taskTimerWithConfig:(CTTimerConfigBlock)config{
+    CTTimer *timer = [[self alloc] init];
+    [timer createForTimerWithConfigBlock:config];
     return timer;
 }
 
-+ (instancetype)timerWithInvocation:(CTInvocation *)invocation timerData:(CTTimerData *)timerData{
-    return [[self alloc] initWithMethod:CTTimerInstanceMethodTimer invocation:invocation timerData:timerData];
++ (instancetype)timerWithConfig:(CTTimerConfigBlock)config{
+    CTTimer *timer = [[self alloc] init];
+    [timer createForTimerWithConfigBlock:config];
+    return timer;
 }
 
-+ (instancetype)scheduledTimerWithInvocation:(CTInvocation *)invocation timerData:(CTTimerData *)timerData{
-    return [[self alloc] initWithMethod:CTTimerInstanceMethodScheduledTimer invocation:invocation timerData:timerData];
++ (instancetype)scheduledTimerWithConfig:(CTTimerConfigBlock)config{
+    CTTimer *timer = [[self alloc] init];
+    [timer createForScheduledTimerWithConfigBlock:config];
+    return timer;
 }
 
-- (instancetype)initWithInvocation:(CTInvocation *)invocation timerData:(CTTimerData *)timerData{
-    return [self initWithMethod:CTTimerInstanceMethodInitializer invocation:invocation timerData:timerData];
-}
-
-- (instancetype)initWithMethod:(CTTimerInstanceMethod)mothed
-                    invocation:(CTInvocation *)invocation
-                     timerData:(CTTimerData *)timerData{
-    NSParameterAssert(invocation);
-    NSParameterAssert(timerData);
-    if(mothed == CTTimerInstanceMethodInitializer){
-        NSParameterAssert(timerData.fireDate);
-    }
-    
+- (instancetype)initWithConfig:(CTTimerConfigBlock)config{
     if(self = [super init]){
-        _isSuspended = NO;
-        [invocation setExecutor:self];
-        
-        switch (mothed) {
-            case CTTimerInstanceMethodTimer:{
-                _timer = [NSTimer timerWithTimeInterval:timerData.interval
-                                                 target:invocation
-                                               selector:@selector(invoke)
-                                               userInfo:timerData.userInfo
-                                                repeats:timerData.repeats];
-            }
-                break;
-            case CTTimerInstanceMethodScheduledTimer:{
-                _timer = [NSTimer scheduledTimerWithTimeInterval:timerData.interval
-                                                          target:invocation
-                                                        selector:@selector(invoke)
-                                                        userInfo:timerData.userInfo
-                                                         repeats:timerData.repeats];
-            }
-                break;
-            case CTTimerInstanceMethodInitializer:{
-                _timer = [[NSTimer alloc] initWithFireDate:timerData.fireDate
-                                                  interval:timerData.interval
-                                                    target:invocation
-                                                  selector:@selector(invoke)
-                                                  userInfo:timerData.userInfo
-                                                   repeats:timerData.repeats];
-            }
-                break;
-            default:
-                break;
-        }
+        [self createForInitTimerWithConfigBlock:config];
     }
     
     return self;
 }
 
-+ (instancetype)taskTimerWithTimeInterval:(NSTimeInterval)timeInterval
-                                   target:(id)target
-                                 selector:(SEL)selector
-                                 userInfo:(id)userInfo
-                                  repeats:(BOOL)repeats{
-    CTTimerData *timerData = [CTTimerData dataWithInterval:timeInterval repeats:repeats];
-    timerData.userInfo = userInfo;
-    CTInvocation *invocation = [CTInvocation invocationWithTarget:target action:selector];
-    return [self taskTimerWithInvocation:invocation timerData:timerData];
+- (void)createForTimerWithConfigBlock:(CTTimerConfigBlock)configBlock{
+    CTTimerConfig *config = [[CTTimerConfig alloc] init];
+    configBlock(config);
+    
+    CTInvocation *invocation = [CTInvocation invocationWithTarget:config.target action:config.action];
+    _timer = [NSTimer timerWithTimeInterval:config.interval
+                                     target:invocation
+                                   selector:@selector(invoke)
+                                   userInfo:config.userInfo
+                                    repeats:config.repeats];
+    
+    [[NSRunLoop currentRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
 }
 
-+ (instancetype)scheduledTimerWithTimeInterval:(NSTimeInterval)timeInterval
-                                        target:(id)target
-                                      selector:(SEL)selector
-                                      userInfo:(id)userInfo
-                                       repeats:(BOOL)repeats{
-    CTTimerData *timerData = [CTTimerData dataWithInterval:timeInterval repeats:repeats];
-    timerData.userInfo = userInfo;
-    CTInvocation *invocation = [CTInvocation invocationWithTarget:target action:selector];
-    return [self scheduledTimerWithInvocation:invocation timerData:timerData];
+- (void)createForScheduledTimerWithConfigBlock:(CTTimerConfigBlock)configBlock{
+    CTTimerConfig *config = [[CTTimerConfig alloc] init];
+    configBlock(config);
+    
+    CTInvocation *invocation = [CTInvocation invocationWithTarget:config.target action:config.action];
+    _timer = [NSTimer scheduledTimerWithTimeInterval:config.interval
+                                              target:invocation
+                                            selector:@selector(invoke)
+                                            userInfo:config.userInfo
+                                             repeats:config.repeats];
 }
 
-+ (instancetype)timerWithTimeInterval:(NSTimeInterval)timeInterval
-                               target:(id)target
-                             selector:(SEL)selector
-                             userInfo:(id)userInfo
-                              repeats:(BOOL)repeats{
-    CTTimerData *timerData = [CTTimerData dataWithInterval:timeInterval repeats:repeats];
-    timerData.userInfo = userInfo;
-    CTInvocation *invocation = [CTInvocation invocationWithTarget:target action:selector];
-    return [self timerWithInvocation:invocation timerData:timerData];
-}
-
-- (instancetype)initWithFireDate:(NSDate *)fireDate
-                        interval:(NSTimeInterval)timeInterval
-                          target:(id)target
-                        selector:(SEL)selector
-                        userInfo:(id)userInfo
-                         repeats:(BOOL)repeats{
-    CTTimerData *timerData = [CTTimerData dataWithInterval:timeInterval repeats:repeats];
-    timerData.userInfo = userInfo;
-    timerData.fireDate = fireDate;
-    CTInvocation *invocation = [CTInvocation invocationWithTarget:target action:selector];
-    return [self initWithInvocation:invocation timerData:timerData];
+- (void)createForInitTimerWithConfigBlock:(CTTimerConfigBlock)configBlock{
+    CTTimerConfig *config = [[CTTimerConfig alloc] init];
+    configBlock(config);
+    
+    NSParameterAssert(config.fireDate);
+    
+    CTInvocation *invocation = [CTInvocation invocationWithTarget:config.target action:config.action];
+    _timer = [[NSTimer alloc] initWithFireDate:config.fireDate
+                                      interval:config.interval
+                                        target:invocation
+                                      selector:@selector(invoke)
+                                      userInfo:config.userInfo
+                                       repeats:config.repeats];
 }
 
 - (NSDate *)fireDate{
@@ -163,15 +114,21 @@ typedef NS_ENUM(NSInteger, CTTimerInstanceMethod) {
 
 - (void)fire{
     [_timer fire];
+    
     _isSuspended = NO;
 }
 
 - (void)invalidate{
     [_timer invalidate];
+    
     _isSuspended = NO;
 }
 
 - (void)pause{
+    if(_isSuspended){
+        return;
+    }
+    
     if(_timer.isValid){
         _timer.fireDate = [NSDate distantFuture];
         _isSuspended = YES;
@@ -179,18 +136,22 @@ typedef NS_ENUM(NSInteger, CTTimerInstanceMethod) {
 }
 
 - (void)resume{
+    if(!_isSuspended){
+        return;
+    }
+    
     if(_timer.isValid){
-        _timer.fireDate = [NSDate date];
+        _timer.fireDate = [NSDate dateWithTimeIntervalSinceNow:_timer.timeInterval];
     }
     
     _isSuspended = NO;
 }
 
-- (void)addToRunLoop:(NSRunLoop *)runLoop forMode:(NSString *)mode{
+- (void)addToRunLoop:(NSRunLoop *)runLoop forMode:(NSRunLoopMode)mode{
     NSParameterAssert(runLoop);
     NSParameterAssert(mode);
     
-    if(_timer == nil){
+    if(!_timer){
         return;
     }
     
@@ -207,19 +168,6 @@ typedef NS_ENUM(NSInteger, CTTimerInstanceMethod) {
 
 @end
 
-@implementation CTTimerData
-
-+ (instancetype)dataWithInterval:(NSTimeInterval)interval repeats:(BOOL)repeats{
-    return [[self alloc] initWithInterval:interval repeats:repeats];
-}
-
-- (instancetype)initWithInterval:(NSTimeInterval)interval repeats:(BOOL)repeats{
-    if(self = [super init]){
-        _interval = interval;
-        _repeats = repeats;
-    }
-    
-    return self;
-}
+@implementation CTTimerConfig
 
 @end

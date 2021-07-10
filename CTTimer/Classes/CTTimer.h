@@ -2,13 +2,15 @@
 //  CTTimer.h
 //  Pods
 //
-//  Created by wshaolin on 16/7/5.
-//  Copyright © 2016年 wshaolin. All rights reserved.
+//  Created by wshaolin on 2017/6/14.
+//
 //
 
-#import "CTInvocation.h"
+#import <Foundation/Foundation.h>
 
-@class CTTimerData;
+@class CTTimerConfig;
+
+typedef void(^CTTimerConfigBlock)(CTTimerConfig *config);
 
 @interface CTTimer : NSObject
 
@@ -20,58 +22,43 @@
 @property (nonatomic, assign, readonly) BOOL isSuspended;
 @property (nonatomic, assign) NSTimeInterval tolerance;
 
-+ (instancetype)taskTimerWithInvocation:(CTInvocation *)invocation timerData:(CTTimerData *)timerData;
+/**
+ * Creates and returns a new CTTimer object initialized with the specified block object and schedules it on the current run loop in the `NSRunLoopCommonModes` mode.
+ */
++ (instancetype)taskTimerWithConfig:(CTTimerConfigBlock)config;
 
-+ (instancetype)scheduledTimerWithInvocation:(CTInvocation *)invocation timerData:(CTTimerData *)timerData;
+/**
+ * Creates and returns a new CTTimer object initialized with the specified block object. This timer needs to be scheduled on a run loop (via -[CTTimer addToRunLoop: forMode:]) before it will fire.
+ */
++ (instancetype)timerWithConfig:(CTTimerConfigBlock)config;
 
-+ (instancetype)timerWithInvocation:(CTInvocation *)invocation timerData:(CTTimerData *)timerData;
+/**
+ * Creates and returns a new CTTimer object initialized with the specified block object and schedules it on the current run loop in the default mode.
+ */
++ (instancetype)scheduledTimerWithConfig:(CTTimerConfigBlock)config;
 
-- (instancetype)initWithInvocation:(CTInvocation *)invocation timerData:(CTTimerData *)timerData;
+/**
+ * Initializes a new CTTimer object using the block as the main body of execution for the timer. This timer needs to be scheduled on a run loop (via -[CTTimer addToRunLoop: forMode:]) before it will fire.
+ * In this way, appropriate `fireDate` must be set in config block.
+ */
+- (instancetype)initWithConfig:(CTTimerConfigBlock)config;
 
 - (void)fire;
 - (void)invalidate;
 - (void)pause;
 - (void)resume;
 
-- (void)addToRunLoop:(NSRunLoop *)runLoop forMode:(NSString *)mode;
-
-+ (instancetype)taskTimerWithTimeInterval:(NSTimeInterval)timeInterval
-                                   target:(id)target
-                                 selector:(SEL)selector
-                                 userInfo:(id)userInfo
-                                  repeats:(BOOL)repeats;
-
-+ (instancetype)scheduledTimerWithTimeInterval:(NSTimeInterval)timeInterval
-                                        target:(id)target
-                                      selector:(SEL)selector
-                                      userInfo:(id)userInfo
-                                       repeats:(BOOL)repeats;
-
-+ (instancetype)timerWithTimeInterval:(NSTimeInterval)timeInterval
-                               target:(id)target
-                             selector:(SEL)selector
-                             userInfo:(id)userInfo
-                              repeats:(BOOL)repeats;
-
-- (instancetype)initWithFireDate:(NSDate *)fireDate
-                        interval:(NSTimeInterval)timeInterval
-                          target:(id)target
-                        selector:(SEL)selector
-                        userInfo:(id)userInfo
-                         repeats:(BOOL)repeats;
+- (void)addToRunLoop:(NSRunLoop *)runLoop forMode:(NSRunLoopMode)mode;
 
 @end
 
-@interface CTTimerData : NSObject
+@interface CTTimerConfig : NSObject
 
-@property (nonatomic, assign, readonly) NSTimeInterval interval;
-@property (nonatomic, assign, readonly) BOOL repeats;
-
+@property (nonatomic, strong) id target;
+@property (nonatomic, assign) SEL action;
+@property (nonatomic, assign) NSTimeInterval interval;
+@property (nonatomic, assign) BOOL repeats;
 @property (nonatomic, strong) NSDate *fireDate;
 @property (nonatomic, strong) id userInfo;
-
-+ (instancetype)dataWithInterval:(NSTimeInterval)interval repeats:(BOOL)repeats;
-
-- (instancetype)initWithInterval:(NSTimeInterval)interval repeats:(BOOL)repeats;
 
 @end

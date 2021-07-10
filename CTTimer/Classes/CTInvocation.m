@@ -2,8 +2,8 @@
 //  CTInvocation.m
 //  Pods
 //
-//  Created by wshaolin on 16/7/7.
-//  Copyright © 2016年 wshaolin. All rights reserved.
+//  Created by wshaolin on 2017/6/14.
+//
 //
 
 #import "CTInvocation.h"
@@ -29,7 +29,7 @@
 }
 
 - (instancetype)initWithTarget:(id)target action:(SEL)action{
-    if(target == nil || action == NULL){
+    if(!target || !action){
         return nil;
     }
     
@@ -38,7 +38,7 @@
     }
     
     NSMethodSignature *methodSignature = [target methodSignatureForSelector:action];
-    if(methodSignature == nil){
+    if(!methodSignature){
         return nil;
     }
     
@@ -54,13 +54,11 @@
 }
 
 - (instancetype)initWithActionBlock:(CTInvocationActionBlock)actionBlock{
-    if(actionBlock == NULL){
+    if(!actionBlock){
         return nil;
     }
     
     if(self = [super init]){
-        _hasArgs = NO;
-        
         self.actionBlock = actionBlock;
     }
     
@@ -68,10 +66,13 @@
 }
 
 - (void)setExecutor:(id)executor{
-    if(_executor != executor){
-        _executor = executor;
-        
-        [self setArg:&_executor atIndex:CTInvocationFirstArgumentIndex];
+    if(_executor == executor){
+        return;
+    }
+    
+    _executor = executor;
+    if(_invocation && _executor){
+        [_invocation setArgument:&_executor atIndex:CTInvocationFirstArgumentIndex];
     }
 }
 
@@ -88,21 +89,19 @@
 }
 
 - (BOOL)isValidArgIndex:(NSInteger)index{
-    if(_invocation != nil){
-        return (index >= CTInvocationFirstArgumentIndex) &&
-        (index < _invocation.methodSignature.numberOfArguments);
+    if(!_invocation){
+        return NO;
     }
     
-    return NO;
+    return index >= CTInvocationFirstArgumentIndex &&
+    index < _invocation.methodSignature.numberOfArguments;
 }
 
 - (void)invoke{
-    if(_invocation != nil){
+    if(_invocation){
         [_invocation invoke];
     }else{
-        if(_actionBlock){
-            _actionBlock(_executor);
-        }
+        !_actionBlock ?: _actionBlock(_executor);
     }
 }
 
@@ -114,4 +113,3 @@
 @end
 
 NSUInteger const CTInvocationFirstArgumentIndex = 2;
-
