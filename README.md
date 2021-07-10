@@ -21,9 +21,9 @@ CTTimer is available through [CocoaPods](http://cocoapods.org). To install
 it, simply add the following line to your Podfile:
 
 ```objectivec
-#import "CXTimer.h"
+#import "CTTimer.h"
 
-_timer = [CXTimer taskTimerWithConfig:^(CXTimerConfig *config) {
+_timer = [CTTimer taskTimerWithConfig:^(CTTimerConfig *config) {
     config.target = self;
     config.action = @selector(timerAction:);
     config.interval = 1.0;
@@ -36,7 +36,7 @@ _timer = [CXTimer taskTimerWithConfig:^(CXTimerConfig *config) {
 [_timer invalidate]; // 停止定时器
 
 // 定时器调用方法
-- (void)timerAction:(CXTimer *)timer{
+- (void)timerAction:(CTTimer *)timer{
     // 做事
 }
 ```
