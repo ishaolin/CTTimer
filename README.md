@@ -2,14 +2,9 @@
 
 解决NSTimer强制持有的问题，使用也比NSTimer方便。
 
-[![CI Status](http://img.shields.io/travis/ishaolin/CTTimer.svg?style=flat)](https://travis-ci.org/ishaolin/CTTimer)
 [![Version](https://img.shields.io/cocoapods/v/CTTimer.svg?style=flat)](http://cocoapods.org/pods/CTTimer)
 [![License](https://img.shields.io/cocoapods/l/CTTimer.svg?style=flat)](http://cocoapods.org/pods/CTTimer)
 [![Platform](https://img.shields.io/cocoapods/p/CTTimer.svg?style=flat)](http://cocoapods.org/pods/CTTimer)
-
-## Example
-
-To run the example project, clone the repo, and run `pod install` from the Example directory first.
 
 ## Requirements
 
