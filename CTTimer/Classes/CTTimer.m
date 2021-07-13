@@ -48,6 +48,7 @@
     configBlock(config);
     
     CTInvocation *invocation = [CTInvocation invocationWithTarget:config.target action:config.action];
+    invocation.invoker = self;
     _timer = [NSTimer timerWithTimeInterval:config.interval
                                      target:invocation
                                    selector:@selector(invoke)
@@ -62,6 +63,7 @@
     configBlock(config);
     
     CTInvocation *invocation = [CTInvocation invocationWithTarget:config.target action:config.action];
+    invocation.invoker = self;
     _timer = [NSTimer scheduledTimerWithTimeInterval:config.interval
                                               target:invocation
                                             selector:@selector(invoke)
@@ -76,6 +78,7 @@
     NSParameterAssert(config.fireDate);
     
     CTInvocation *invocation = [CTInvocation invocationWithTarget:config.target action:config.action];
+    invocation.invoker = self;
     _timer = [[NSTimer alloc] initWithFireDate:config.fireDate
                                       interval:config.interval
                                         target:invocation
@@ -161,7 +164,9 @@
 }
 
 - (void)dealloc{
-    [_timer invalidate];
+    if(_timer.isValid){
+        [_timer invalidate];
+    }
     
     _timer = nil;
 }

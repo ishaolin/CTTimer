@@ -10,7 +10,6 @@
 
 @interface CTInvocation(){
     NSInvocation *_invocation;
-    __weak id _executor;
 }
 
 @property (nonatomic, assign, readonly) BOOL hasArgs;
@@ -65,14 +64,14 @@
     return self;
 }
 
-- (void)setExecutor:(id)executor{
-    if(_executor == executor){
+- (void)setInvoker:(id)invoker{
+    if(_invoker == invoker){
         return;
     }
     
-    _executor = executor;
-    if(_invocation && _executor){
-        [_invocation setArgument:&_executor atIndex:CTInvocationFirstArgumentIndex];
+    _invoker = invoker;
+    if(_invocation && invoker){
+        [_invocation setArgument:&invoker atIndex:CTInvocationFirstArgumentIndex];
     }
 }
 
@@ -101,7 +100,7 @@
     if(_invocation){
         [_invocation invoke];
     }else{
-        !_actionBlock ?: _actionBlock(_executor);
+        !_actionBlock ?: _actionBlock(_invoker);
     }
 }
 

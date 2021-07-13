@@ -20,9 +20,16 @@ iOS 8以上，ARC
 CTTimer is available through [CocoaPods](http://cocoapods.org). To install
 it, simply add the following line to your Podfile:
 
-```objectivec
-#import "CTTimer.h"
+```ruby
+pod 'CTTimer'
+```
 
+## Example
+```objectivec
+// 头文件引入
+#import <CTTimer/CTTimer.h>
+
+// 创建定时器
 _timer = [CTTimer taskTimerWithConfig:^(CTTimerConfig *config) {
     config.target = self;
     config.action = @selector(timerAction:);
@@ -30,14 +37,26 @@ _timer = [CTTimer taskTimerWithConfig:^(CTTimerConfig *config) {
     config.repeats = YES;
 }];
 
-[_timer fire]; // 启动定时器
-[_timer pause]; // 暂停定时器
-[_timer resume]; // 定时器继续
-[_timer invalidate]; // 停止定时器
+// 启动定时器
+[_timer fire];
+// 暂停定时器
+[_timer pause];
+// 定时器继续
+[_timer resume];
+// 停止定时器
+[_timer invalidate];
 
 // 定时器调用方法
 - (void)timerAction:(CTTimer *)timer{
     // 做事
+}
+
+- (void)dealloc{
+    if(_timer.isValid){
+        [_timer invalidate];
+    }
+    
+    _timer = nil;
 }
 ```
 

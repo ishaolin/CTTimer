@@ -1,6 +1,0 @@
-use_frameworks!
-target 'CTTimer_Tests' do
-  pod 'CTTimer', :path => '../'
-  
-  
-end
